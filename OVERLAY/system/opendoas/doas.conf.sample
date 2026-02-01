@@ -1,0 +1,58 @@
+# Sample configuration file for doas
+# See doas.conf(5) for full documentation.
+#
+# This file is provided as an example only.
+# To use it, copy it to /etc/doas.conf and adjust as needed:
+#
+#   cp doas.conf.sample /etc/doas.conf
+#   chown root:root /etc/doas.conf
+#   chmod 0400 /etc/doas.conf
+#   doas -C /etc/doas.conf
+#
+# IMPORTANT:
+# /etc/doas.conf must be owned by root and not writable by others,
+# or doas will refuse to run.
+#
+# WARNING:
+# doas is installed as a SUID root binary.
+# Misconfigured rules may allow unintended privilege escalation.
+
+# Basic administration
+
+# Permit members of the wheel group to run commands as root.
+# A password will be required.
+permit :wheel
+
+# User-specific rules
+
+# Permit user alice to run any command as root.
+#permit alice as root
+
+# Permit user bob to run commands as root while keeping the environment.
+# This may be required for graphical (X11) applications.
+# Use sparingly.
+#permit keepenv bob as root
+
+# Restricted command execution
+
+# Permit user cindy to manage packages using slackpkg only.
+# Absolute paths are recommended.
+#permit cindy as root cmd /usr/sbin/slackpkg args update
+#permit cindy as root cmd /usr/sbin/slackpkg args upgrade
+
+# Logging control
+
+# Permit user david to run the id command as root without logging.
+#permit nolog david as root cmd /usr/bin/id
+
+#
+# Optional alternatives (use with caution)
+#
+
+# Cache authentication for a short time (similar to sudo).
+# NOTE: Upstream considers password persistence potentially dangerous.
+#permit persist :wheel
+
+# Allow wheel group without password (not recommended on multi-user systems).
+#permit nopass :wheel
+
