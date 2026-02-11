@@ -24,7 +24,7 @@ cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=st
 VERSION=${VERSION:-0.9.3}
-BUILD=${BUILD:-3}
+BUILD=${BUILD:-4}
 TAG=${TAG:-_SBo}
 PKGTYPE=${PKGTYPE:-tgz}
 
@@ -72,12 +72,16 @@ find -L .  -perm /111 -a \! -perm 755 -a -exec chmod 755 {} \+ -o \
 # Now apply any other patches the user might have added. Have to
 # do this *after* applying custom config.h, so any changes to
 # config.h here won't get overwritten.
-for i in $(ls $CWD/patches 2>/dev/null); do
-  [ "$i" = "README" ] && continue
-  echo "=== applying patch $i"
-  patch -p1 < $CWD/patches/$i
-  PATCHES+=" $i"
-done
+PATCHES=""
+if [ -d "$CWD/patches" ]; then
+  for i in $CWD/patches/*.patch; do
+    [ ! -f "$i" ] && continue
+    basename_i="$(basename $i)"
+    echo "=== applying patch $basename_i"
+    patch -p1 < "$i" || exit 1
+    PATCHES+=" $basename_i"
+  done
+fi
 
 # 20200123 bkw: 'tic' stuff in Makefile doesn't respect DESTDIR.
 sed -i "s|\\<tic\\>|& -o $PKG/usr/share/terminfo|" Makefile
@@ -103,36 +107,45 @@ gzip -9 $PKG/usr/man/man?/*
 # of these are better. Instead of hardcoding a list here, we'll
 # actually use the ncurses package's file list to decide what to
 # exclude.
-pkgfile="$(
-  ls /var/lib/pkgtools/packages/ncurses-* \
-  | grep '/ncurses-[^-]\+-[^-]\+-[^-]\+$' \
-)"
+NCURSES_PKG="$(ls -t /var/lib/pkgtools/packages/ncurses-* 2>/dev/null | \
+               grep '/ncurses-[^-]\+-[^-]\+-[^-]\+$' | head -1)"
 
-if [ -z "$pkgfile" ]; then
+if [ -n "$NCURSES_PKG" -a -f "$NCURSES_PKG" ]; then
+  for file in $PKG/usr/share/terminfo/s/*; do
+    [ ! -f "$file" ] && continue
+    name="$(basename $file)"
+    if grep -q "^usr/share/terminfo/s/${name}\$" "$NCURSES_PKG"; then
+      echo "=== excluding terminfo entry: $name"
+      rm -f "$file"
+    fi
+  done
+else
   echo "!!! can't find ncurses package, including all st terminfo entries"
-  pkgfile=/dev/null
 fi
-
-for file in $PKG/usr/share/terminfo/s/*; do
-  name="$( basename $file )"
-  if grep -q '^usr/share/terminfo/s/'$name'$' $pkgfile
-  then
-    echo "=== excluding terminfo entry: $name"
-    rm $file
-  fi
-done
 
 # .desktop file adapted from xterm.desktop
 mkdir -p $PKG/usr/share/applications
 cat $CWD/$PRGNAM.desktop > $PKG/usr/share/applications/$PRGNAM.desktop
 
 # Icons converted from https://en.wikipedia.org/wiki/File:Suckless_logo.svg
-for px in 16 32 48 64 128; do
-  size=${px}x${px}
-  dir=$PKG/usr/share/icons/hicolor/$size/apps
-  mkdir -p $dir
-  convert -resize $size $CWD/$PRGNAM.png $dir/$PRGNAM.png
-done
+# Handle ImageMagick v7 (magick convert) vs v6 (convert)
+if command -v magick >/dev/null 2>&1; then
+  MAGICK_CMD="magick convert"
+elif command -v convert >/dev/null 2>&1; then
+  MAGICK_CMD="convert"
+else
+  echo "WARNING: No ImageMagick found, skipping icon generation"
+  MAGICK_CMD=""
+fi
+
+if [ -n "$MAGICK_CMD" ]; then
+  for px in 16 32 48 64 128; do
+    size=${px}x${px}
+    dir=$PKG/usr/share/icons/hicolor/$size/apps
+    mkdir -p $dir
+    $MAGICK_CMD -resize $size $CWD/$PRGNAM.png $dir/$PRGNAM.png
+  done
+fi
 
 mkdir -p $PKG/usr/share/pixmaps
 ln -s ../icons/hicolor/48x48/apps/$PRGNAM.png $PKG/usr/share/pixmaps/$PRGNAM.png
@@ -143,8 +156,11 @@ cp -a config.h FAQ LEGACY LICENSE README TODO $PKGDOC
 cat $CWD/$PRGNAM.SlackBuild > $PKGDOC/$PRGNAM.SlackBuild
 
 if [ -n "$PATCHES" ]; then
-  echo "This package was built with the following patch(es):" > $PKGDOC/patches.txt
-  echo "$PATCHES" | sed 's, ,\n,g' >> $PKGDOC/patches.txt
+  {
+    echo "This package was built with the following patch(es):"
+    echo ""
+    echo "$PATCHES" | tr ' ' '\n' | sed '/^$/d'
+  } > $PKGDOC/patches.txt
 fi
 
 mkdir -p $PKG/install

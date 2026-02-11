@@ -1,0 +1,27 @@
+From 0723b7e39e73b2bcfce047b047f6e795d6184028 Mon Sep 17 00:00:00 2001
+From: Roberto E. Vargas Caballero <k0ga@shike2.net>
+Date: Fri, 28 Nov 2025 16:31:59 +0100
+Subject: [PATCH] Disable bracked paste in reset
+
+Sadly, there are too many programs today that enable this mode
+and it is becoming very common to find the terminal adding
+characters before and after in every of your pastes. A reset
+should disable this mode.
+---
+ st.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/st.c b/st.c
+index 2358..2358 100644
+--- a/st.c
++++ b/st.c
+@@ -2358,6 +2358,7 @@ eschandle(uchar ascii)
+ 		resettitle();
+ 		xloadcols();
+ 		xsetmode(0, MODE_HIDE);
++		xsetmode(0, MODE_BRCKTPASTE);
+ 		break;
+ 	case '=': /* DECPAM -- Application keypad */
+ 		xsetmode(1, MODE_APPKEYPAD);
+-- 
+2.39.2

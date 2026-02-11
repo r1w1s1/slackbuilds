@@ -1,2 +1,59 @@
-Place any st patches you want to apply in this directory before
-running the SlackBuild.
+st OVERLAY Patches
+==================
+
+This directory contains backported upstream fixes applied to st 0.9.3.
+
+Patches are applied in numerical order during the SlackBuild process.
+
+
+01-st-bracketed-paste-reset.patch
+----------------------------------
+Upstream commit: 0723b7e39e73b2bcfce047b047f6e795d6184028
+Author: Roberto E. Vargas Caballero <k0ga@shike2.net>
+Date: Fri, 28 Nov 2025
+
+Disables bracketed paste mode on terminal reset.
+
+Rationale: Many programs enable bracketed paste mode but fail to disable
+it properly on exit. Without this fix, paste operations may show escape
+sequences as literal text. This is particularly noticeable when using
+terminal multiplexers like mtm with frequent program entry/exit cycles.
+
+
+02-st-guard-testdir-zero-sized.patch
+-------------------------------------
+Upstream commit: 688f70add0d1da8a416bf7df763328d694a24a3a
+Author: Milos Nikic <nikic.milos@gmail.com>
+Date: Wed, 14 Jan 2026
+
+Guards tsetdirt() against zero-sized terminal during initialization
+and resize operations.
+
+Rationale: Prevents potential out-of-bounds access when term.row is zero
+during early initialization or window resize. Defensive fix for edge cases.
+
+
+Why Backport?
+-------------
+These patches fix real bugs without adding features or changing behavior
+significantly. They improve robustness and user experience, particularly
+for heavy copy/paste usage and edge-case window management scenarios.
+
+Both patches are small, focused, and apply cleanly to st 0.9.3. They will
+likely be included in the next official st release but are valuable to have
+now for daily use on Slackware-current systems.
+
+
+Maintenance Notes
+-----------------
+When upstream releases st 0.9.4 or later, check if these patches are
+included. If so, this patches directory can be removed or archived.
+
+To verify if patches are still needed:
+  1. Check st git log for these commit hashes
+  2. Review st changelog/release notes
+  3. Test paste behavior and resize edge cases
+
+Last reviewed: 2026-02-10
+
+
