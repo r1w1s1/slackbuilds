@@ -71,8 +71,8 @@ static const Rule rules[] = {
 
 	/* class, instance, title, tags mask, isfloating, monitor */
 	
-	/* Firefox always starts on tag 1 and floating */
-	{ "Firefox", NULL,     NULL,  1 << 0,    1,           -1 },
+	/* firefox always starts on tag 1 and floating */
+	{ "firefox", NULL,     NULL,  1 << 0,    1,           -1 },
 
 	/* feh: image viewer, always floating */
 	{ "feh",     NULL,     NULL,  0,         1,           -1 },
