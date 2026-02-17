@@ -1,0 +1,36 @@
+commit 8b48986f4c730725367e2865e5ea24931855018f
+Author: Hiltjo Posthuma <hiltjo@codemadness.org>
+Date:   Mon Sep 29 18:47:16 2025 +0200
+
+    drw.c: drw_scm_free: call free inside
+    
+    Because drw_scm_create() allocates it.
+
+diff --git a/dmenu.c b/dmenu.c
+index 9bad959..9577b37 100644
+--- a/dmenu.c
++++ b/dmenu.c
+@@ -101,10 +101,8 @@ cleanup(void)
+ 	size_t i;
+ 
+ 	XUngrabKeyboard(dpy, CurrentTime);
+-	for (i = 0; i < SchemeLast; i++) {
++	for (i = 0; i < SchemeLast; i++)
+ 		drw_scm_free(drw, scheme[i], 2);
+-		free(scheme[i]);
+-	}
+ 	for (i = 0; items && items[i].text; ++i)
+ 		free(items[i].text);
+ 	free(items);
+diff --git a/drw.c b/drw.c
+index 98dbaa8..9fdd1a4 100644
+--- a/drw.c
++++ b/drw.c
+@@ -215,6 +215,7 @@ drw_scm_free(Drw *drw, Clr *scm, size_t clrcount)
+ 
+ 	for (i = 0; i < clrcount; i++)
+ 		drw_clr_free(drw, &scm[i]);
++	free(scm);
+ }
+ 
+ void

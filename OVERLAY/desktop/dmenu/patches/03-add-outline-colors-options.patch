@@ -1,0 +1,49 @@
+commit 7175c4880bac3d2a2d4a6262b59193f0a38e2fdb
+Author: Julien Addé <juadde+suckless@gmail.com>
+Date:   Wed Jan 28 15:57:20 2026 +0100
+
+    add -of and -ob arguments for outline colors options for multi-selection
+
+diff --git a/dmenu.1 b/dmenu.1
+index 323f93c..ed0e442 100644
+--- a/dmenu.1
++++ b/dmenu.1
+@@ -20,6 +20,10 @@ dmenu \- dynamic menu
+ .IR color ]
+ .RB [ \-sf
+ .IR color ]
++.RB [ \-ob
++.IR color ]
++.RB [ \-of
++.IR color ]
+ .RB [ \-w
+ .IR windowid ]
+ .P
+@@ -75,6 +79,12 @@ defines the selected background color.
+ .BI \-sf " color"
+ defines the selected foreground color.
+ .TP
++.BI \-ob " color"
++defines the outline background color (for multiple selection).
++.TP
++.BI \-of " color"
++defines the outline foreground color (for multiple selection).
++.TP
+ .B \-v
+ prints version information to stdout, then exits.
+ .TP
+diff --git a/dmenu.c b/dmenu.c
+index 9577b37..363d19f 100644
+--- a/dmenu.c
++++ b/dmenu.c
+@@ -755,6 +755,10 @@ main(int argc, char *argv[])
+ 			colors[SchemeSel][ColBg] = argv[++i];
+ 		else if (!strcmp(argv[i], "-sf"))  /* selected foreground color */
+ 			colors[SchemeSel][ColFg] = argv[++i];
++		else if (!strcmp(argv[i], "-ob"))  /* outline background color */
++			colors[SchemeOut][ColBg] = argv[++i];
++		else if (!strcmp(argv[i], "-of"))  /* outline foreground color */
++			colors[SchemeOut][ColFg] = argv[++i];
+ 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
+ 			embed = argv[++i];
+ 		else
