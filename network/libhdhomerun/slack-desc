@@ -6,14 +6,14 @@
 # customary to leave one space after the ':' except on otherwise blank lines.
 
             |-----handy-ruler------------------------------------------------------|
-node-xoauth2: node-xoauth2 (XOAuth2 token generation with node.js)
-node-xoauth2:
-node-xoauth2: xoauth2 generates XOAUTH2 login tokens from provided client and
-node-xoauth2: user credentials.
-node-xoauth2:
-node-xoauth2: https://www.npmjs.com/package/xoauth2
-node-xoauth2:
-node-xoauth2:
-node-xoauth2:
-node-xoauth2:
-node-xoauth2:
+libhdhomerun: libhdhomerun (Library and CLI utility for HDHomeRun tuners)
+libhdhomerun:
+libhdhomerun: This library implements the libhdhomerun protocol for use with
+libhdhomerun: Silicondust HDHomeRun TV tuners.
+libhdhomerun:
+libhdhomerun:
+libhdhomerun:
+libhdhomerun: Homepage: https://github.com/Silicondust/libhdhomerun
+libhdhomerun:
+libhdhomerun:
+libhdhomerun:
