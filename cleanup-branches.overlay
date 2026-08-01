@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+protected_branch=master
+remote=origin
+mode=dry-run
+
+case "${1:-}" in
+  "")
+    ;;
+  --apply)
+    mode=apply
+    ;;
+  --dry-run)
+    ;;
+  *)
+    printf 'Usage: %s [--dry-run|--apply]\n' "$0" >&2
+    exit 2
+    ;;
+esac
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+if [ "$(git branch --show-current)" != "$protected_branch" ]; then
+  printf 'Refusing to run: check out %s first.\n' "$protected_branch" >&2
+  exit 1
+fi
+
+git show-ref --verify --quiet "refs/heads/$protected_branch" || {
+  printf 'Refusing to run: local %s does not exist.\n' "$protected_branch" >&2
+  exit 1
+}
+git remote get-url "$remote" >/dev/null || {
+  printf 'Refusing to run: remote %s does not exist.\n' "$remote" >&2
+  exit 1
+}
+
+if [ "$mode" = apply ]; then
+  delete_local() { git branch -D -- "$1"; }
+  delete_remote() { git push "$remote" --delete "$1"; }
+else
+  delete_local() { printf '[dry-run] would delete local %s\n' "$1"; }
+  delete_remote() { printf '[dry-run] would delete %s/%s\n' "$remote" "$1"; }
+fi
+
+while IFS= read -r branch; do
+  [ "$branch" = "$protected_branch" ] || delete_local "$branch"
+done < <(git for-each-ref --format='%(refname:short)' refs/heads/)
+
+while IFS=$'\t' read -r _ ref; do
+  branch=${ref#refs/heads/}
+  [ "$branch" = "$protected_branch" ] || delete_remote "$branch"
+done < <(git ls-remote --heads "$remote")
