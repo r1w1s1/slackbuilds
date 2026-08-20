@@ -1,13 +1,15 @@
-SLACKBUILDS-OVERLAY
+SLACKWARE-CURRENT PERSONAL PACKAGES
 
-Local SlackBuild overrides for Slackware-current.
-Not suitable for upstream submission.
+Personal SlackBuilds and local package customizations for Slackware-current.
+This branch contains packages used on my machine that differ from the
+SlackBuilds.org versions or are not suitable for upstream submission.
 
 WHY
 
-Kept here either for my custom config.h, or because the SlackBuilds.org
-version uses an older release or different patches than what I run.
-Full SlackBuilds are kept (not just config.h) so each is rebuildable.
+Packages are kept here either for custom config.h files, local patches, or
+because the SlackBuilds.org version uses an older release or different
+patches than what I run. Full SlackBuilds are kept so each package remains
+rebuildable.
 
 PACKAGES
 
@@ -15,8 +17,9 @@ desktop/dwm
 desktop/dmenu
 desktop/herbe
 desktop/slstatus
+misc/bdf2psf
+office/mupdf
 system/busybox
 system/st
-system/z
 system/tabbed
-office/mupdf
+system/z
