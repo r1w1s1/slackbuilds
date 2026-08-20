@@ -1,11 +1,13 @@
-SLACKBUILDS-OVERLAY
+SLACKBUILDS WORKFLOW
 
-This repository is a local fork of SlackBuilds.org used to track upstream
-cleanly while maintaining a small, intentional set of local SlackBuild
-overrides (OVERLAY).
+This repository is a fork of SlackBuilds.org. The master branch follows the
+upstream tree and is used for contributions that may be submitted upstream.
 
-OVERLAY exists for Slackware-current usage, local policies, and changes
-that are not suitable for upstream submission.
+The current-overlay branch is a personal Slackware-current collection. It
+contains only packages used on the local machine that are not maintained by
+the owner, require local customizations, or are not suitable for submission
+to SlackBuilds.org. Examples include local config.h files for suckless
+projects and package-specific patches.
 
 
 REPOSITORY MODEL
@@ -14,25 +16,23 @@ REPOSITORY MODEL
   Canonical SlackBuilds.org history (read-only).
 
 - master
-  Local fork.
-  Contains permanent OVERLAY commits.
+  Local fork of the complete SlackBuilds.org tree.
   Synced from upstream via merge commits.
-  Not safe as a base for upstream pull requests.
+  Used as the base for upstream contribution branches.
 
 - add/*, update/*
   Temporary branches for upstream contributions.
   Always created from upstream/master.
   Deleted after merge.
 
-- OVERLAY/
-  Local-only SlackBuild overrides.
-  Permanent and opinionated.
-  Never submitted upstream.
+- current-overlay
+  Orphan branch containing only personal Slackware-current packages and
+  customizations. It is not submitted upstream.
 
 
-WHEN TO USE OVERLAY
+WHEN TO USE CURRENT-OVERLAY
 
-A change belongs in OVERLAY if it is:
+A package belongs in current-overlay if it is:
 
 - Slackware-current specific
 - Required only for local systems
@@ -40,14 +40,14 @@ A change belongs in OVERLAY if it is:
 - Rejected or not desired upstream
 - Experimental or long-term customization
 
-OVERLAY is intentional divergence.
+current-overlay is intentional local divergence.
 
 
-WORKING WITH OVERLAY
+WORKING WITH CURRENT-OVERLAY
 
-All OVERLAY work is done on local master.
+Personal current-overlay work is kept out of master.
 
-1. Switch to master:
+1. Switch to master for upstream synchronization:
 
    git checkout master
 
@@ -56,22 +56,18 @@ All OVERLAY work is done on local master.
    git fetch upstream
    git merge upstream/master
 
-3. Create or modify files only inside OVERLAY/:
+3. Create a temporary branch from upstream/master for an upstream change:
 
-   OVERLAY/category/pkgname/
+   git checkout -b update/pkgname-version upstream/master
 
 4. Test the SlackBuild locally.
 
-5. Commit the OVERLAY change:
+5. Push the contribution branch to your fork:
 
-   git add OVERLAY/category/pkgname
-   git commit -m "OVERLAY: customize pkgname for local use"
+   git push origin update/pkgname-version
 
-6. Push to your fork:
-
-   git push origin master
-
-OVERLAY commits are permanent and must never be submitted upstream.
+Local-only changes belong in current-overlay and must never be submitted
+upstream.
 
 
 UPSTREAM CONTRIBUTIONS
@@ -154,24 +150,27 @@ Remote cleanup (optional):
 
 SAFETY RULES
 
-Once OVERLAY exists on master:
+Master is the upstream fork and current-overlay is a separate personal branch:
 
 - never rebase master
 - never hard-reset master
 - never force-push master
 - never fast-forward merge upstream
-- never branch from master for PRs
+- never branch from current-overlay for PRs
+
+- never delete current-overlay with cleanup-branches.workflow
 
 Only add/* and update/* branches may be used for upstream work.
 
 
 VALIDATION
 
-To confirm that master only diverges due to OVERLAY:
+To review the fork against upstream:
 
   git diff upstream/master..master --stat
 
-Only OVERLAY/ and README.OVERLAY should appear.
+The current-overlay branch is intentionally separate and contains only local
+packages and customizations.
 
 
 PHILOSOPHY
@@ -181,6 +180,5 @@ Local systems stay functional.
 Processes are respected.
 Workflow stays boring.
 
-OVERLAY is where reality lives.
+current-overlay is where local reality lives.
 upstream/master is the source of truth.
-

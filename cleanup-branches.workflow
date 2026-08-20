@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-protected_branch=master
+protected_branches=(master current-overlay)
 remote=origin
 mode=dry-run
 
@@ -23,13 +23,13 @@ esac
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-if [ "$(git branch --show-current)" != "$protected_branch" ]; then
-  printf 'Refusing to run: check out %s first.\n' "$protected_branch" >&2
+if [ "$(git branch --show-current)" != "master" ]; then
+  printf 'Refusing to run: check out master first.\n' >&2
   exit 1
 fi
 
-git show-ref --verify --quiet "refs/heads/$protected_branch" || {
-  printf 'Refusing to run: local %s does not exist.\n' "$protected_branch" >&2
+git show-ref --verify --quiet refs/heads/master || {
+  printf 'Refusing to run: local master does not exist.\n' >&2
   exit 1
 }
 git remote get-url "$remote" >/dev/null || {
@@ -45,11 +45,20 @@ else
   delete_remote() { printf '[dry-run] would delete %s/%s\n' "$remote" "$1"; }
 fi
 
+is_protected() {
+  local branch=$1
+  local protected
+  for protected in "${protected_branches[@]}"; do
+    [ "$branch" = "$protected" ] && return 0
+  done
+  return 1
+}
+
 while IFS= read -r branch; do
-  [ "$branch" = "$protected_branch" ] || delete_local "$branch"
+  is_protected "$branch" || delete_local "$branch"
 done < <(git for-each-ref --format='%(refname:short)' refs/heads/)
 
 while IFS=$'\t' read -r _ ref; do
   branch=${ref#refs/heads/}
-  [ "$branch" = "$protected_branch" ] || delete_remote "$branch"
+  is_protected "$branch" || delete_remote "$branch"
 done < <(git ls-remote --heads "$remote")
