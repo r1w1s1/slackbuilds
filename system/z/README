@@ -1,0 +1,60 @@
+z (jump around in bash/zsh)
+
+z is a bash/zsh extension that tracks your most used directories,
+based on 'frecency'. After a short learning phase, z will take you to
+the most 'frecent' directory that matches ALL of the regexes given
+on the command line, in order. For example, z foo bar would match
+/foo/bar but not /bar/foo. Frecency is a portmanteau of 'recent' and
+'frequency'.
+
+Installation
+------------
+
+The package installs the shell integration as:
+
+    /etc/profile.d/z.sh
+
+Login shells normally read this file through /etc/profile. To also enable z
+in interactive non-login Bash shells, such as many terminal windows, add this
+to ~/.bashrc:
+
+    if ! declare -F _z >/dev/null 2>&1; then
+        . /etc/profile.d/z.sh
+    fi
+
+If ~/.bash_profile sources ~/.bashrc, no additional configuration is needed
+there. Start a new shell, or run:
+
+    . ~/.bashrc
+
+Usage
+-----
+
+Use z with one or more search terms:
+
+    z source
+    z collab slackbuilds
+
+The terms are matched in order. z changes to the highest-ranked matching
+directory. The data file is ~/.z by default and is populated as directories
+are visited.
+
+Useful options include:
+
+    z -l term       list matching directories and their scores
+    z -r term       select by rank only
+    z -t term       select by most recent use
+    z -e term       print the selected directory without changing directory
+    z -x            remove the current directory from the data file
+
+Completion
+----------
+
+Bash completion is installed by z.sh. Tab completion lists matching
+directories, but when there are many matches Bash may insert only their
+common prefix. Add another search term to narrow the result, for example:
+
+    z collab slackbuilds
+
+The z database is learned over time, so a newly created directory may not be
+available until it has been visited from a shell with z enabled.

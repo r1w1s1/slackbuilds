@@ -1,0 +1,28 @@
+From 688f70add0d1da8a416bf7df763328d694a24a3a Mon Sep 17 00:00:00 2001
+From: Milos Nikic <nikic.milos@gmail.com>
+Date: Wed, 14 Jan 2026 21:00:32 -0800
+Subject: [PATCH] st: guard tsetdirt() against zero-sized terminal
+
+tsetdirt() assumes term.row > 0. During early init or
+resize paths this may not hold, leading to out-of-bounds
+access. Bail out early if there are no rows.
+---
+ st.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/st.c b/st.c
+index 965..965 100644
+--- a/st.c
++++ b/st.c
+@@ -965,6 +965,9 @@ tsetdirt(int top, int bot)
+ {
+ 	int i;
+ 
++	if (term.row <= 0)
++		return;
++
+ 	LIMIT(top, 0, term.row-1);
+ 	LIMIT(bot, 0, term.row-1);
+ 
+-- 
+2.39.2

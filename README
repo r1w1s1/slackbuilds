@@ -1,0 +1,22 @@
+SLACKBUILDS-OVERLAY
+
+Local SlackBuild overrides for Slackware-current.
+Not suitable for upstream submission.
+
+WHY
+
+Kept here either for my custom config.h, or because the SlackBuilds.org
+version uses an older release or different patches than what I run.
+Full SlackBuilds are kept (not just config.h) so each is rebuildable.
+
+PACKAGES
+
+desktop/dwm
+desktop/dmenu
+desktop/herbe
+desktop/slstatus
+system/busybox
+system/st
+system/z
+system/tabbed
+office/mupdf

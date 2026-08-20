@@ -1,0 +1,27 @@
+# Source archives
+*.AppImage
+*.rpm
+*.tar.gz
+*.tar.gz.asc
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+*.tbz2
+*.tgz
+*.txz
+*.zip
+*.7z
+*.lz
+*.run
+*.Z
+*.deb
+*.jar
+*.gem
+*.crate
+
+# Editor
+*.swp
+*~
+
+# Desktop metadata
+.directory

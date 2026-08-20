@@ -1,0 +1,112 @@
+From: r1w1s1 <r1w1s1@fastmail.com>
+Date: Fri, 24 Apr 2026
+Subject: Security and performance fixes for z.sh
+
+Small security hardening, one correctness fix, and two performance
+improvements on the interactive hot path (_z --add runs on every shell
+prompt). Based on v1.12 (d37a763).
+
+Security:
+
+  * -x uses `sed -i` with $PWD interpolated into the sed address
+    unescaped. A directory containing ':' or '\' silently fails to be
+    removed, and sed -i is not atomic against concurrent --add. Route
+    -x through the same awk+tempfile+mv path --add already uses.
+  * Tempfile name uses $RANDOM (15 bits) and inherits umask, briefly
+    exposing cd history to other local users. Switch to mktemp in the
+    same directory as the datafile and chmod 600 immediately.
+  * Path passed to awk via -v is subject to backslash-escape processing,
+    so a directory literally named "foo\tbar" gets stored mangled. Pass
+    via ENVIRON instead, which is taken verbatim.
+
+Correctness:
+
+  * $_Z_EXCLUDE_DIRS matching is a glob prefix rather than a path
+    prefix, so an exclude of "/home/u/tmp" also blocks "/home/u/tmpfoo".
+    Anchor with a trailing slash.
+
+Performance:
+
+  * _z_dirs() stats every entry in the datafile to filter out stale
+    ones. --add doesn't need that filter (it rewrites wholesale), and
+    on a datafile with a few hundred entries this is a few hundred
+    stat(2) calls on every shell prompt. Split out a cheap _z_dirs_raw
+    and use it on --add. Query path is unchanged.
+  * --add forks date(1) to read the wall clock on every prompt. bash 5+
+    and zsh expose $EPOCHSECONDS as a builtin; prefer it and fall back
+    to date(1) where missing.
+
+Tested on bash 5.2 and zsh 5.9. Behavior is unchanged for all
+documented z invocations.
+---
+diff --git a/z.sh b/z.sh
+index fec8d1c..d85b252 100644
+--- a/z.sh
++++ b/z.sh
+@@ -41,6 +41,13 @@ _z() {
+     # bail if we don't own ~/.z and $_Z_OWNER not set
+     [ -z "$_Z_OWNER" -a -f "$datafile" -a ! -O "$datafile" ] && return
+ 
++    _z_dirs_raw () {
++        # cheap: no per-entry stat. used on the --add hot path, which
++        # runs on every prompt.
++        [ -f "$datafile" ] && \cat "$datafile"
++        return 0
++    }
++
+     _z_dirs () {
+         [ -f "$datafile" ] || return
+ 
+@@ -63,15 +70,24 @@ _z() {
+         if [ ${#_Z_EXCLUDE_DIRS[@]} -gt 0 ]; then
+             local exclude
+             for exclude in "${_Z_EXCLUDE_DIRS[@]}"; do
+-                case "$*" in "$exclude"*) return;; esac
++                # match the exact path or any path below it. appending
++                # "/" to both sides means an exclude of "/foo" no
++                # longer matches "/foobar".
++                case "$*/" in "$exclude"/*) return;; esac
+             done
+         fi
+ 
+         # maintain the data file
+-        local tempfile="$datafile.$RANDOM"
++        local tempfile
++        tempfile=$(\mktemp "$datafile.XXXXXX") || return
++        \chmod 600 "$tempfile" 2>/dev/null
+         local score=${_Z_MAX_SCORE:-9000}
+-        _z_dirs | \awk -v path="$*" -v now="$(\date +%s)" -v score=$score -F"|" '
++        # use builtin $EPOCHSECONDS (bash 5+, zsh) to avoid fork-exec
++        # of date(1) on every prompt. fall back to date where missing.
++        local now=${EPOCHSECONDS:-$(\date +%s)}
++        _z_dirs_raw | PATH_ARG="$*" \awk -v now="$now" -v score=$score -F"|" '
+             BEGIN {
++                path = ENVIRON["PATH_ARG"]
+                 rank[path] = 1
+                 time[path] = now
+             }
+@@ -128,7 +144,23 @@ _z() {
+                     l) list=1;;
+                     r) typ="rank";;
+                     t) typ="recent";;
+-                    x) \sed -i -e "\:^${PWD}|.*:d" "$datafile";;
++                    x)
++                        # remove $PWD from the datafile atomically, same as
++                        # --add. avoids sed -i's race and sed-address
++                        # metachar injection via PWD (e.g. `:` or `\`).
++                        local tempfile
++                        tempfile=$(\mktemp "$datafile.XXXXXX") || return
++                        _z_dirs | PWD_ARG="$PWD" \awk -F"|" '
++                            BEGIN { p = ENVIRON["PWD_ARG"] }
++                            $1 != p { print }
++                        ' 2>/dev/null >| "$tempfile"
++                        if [ $? -ne 0 ]; then
++                            \env rm -f "$tempfile"
++                        else
++                            [ "$_Z_OWNER" ] && \chown $_Z_OWNER:"$(\id -ng $_Z_OWNER)" "$tempfile"
++                            \env mv -f "$tempfile" "$datafile" || \env rm -f "$tempfile"
++                        fi
++                        ;;
+                 esac; opt=${opt:1}; done;;
+              *) fnd="$fnd${fnd:+ }$1";;
+         esac; last=$1; [ "$#" -gt 0 ] && shift; done

@@ -1,0 +1,49 @@
+From 04ce0d643ed17793803e8516f4c9a5b13b93c400 Mon Sep 17 00:00:00 2001
+From: Avro <avro@disroot.org>
+Date: Mon, 29 Jun 2026 14:26:34 +0000
+Subject: [PATCH] fix async-unsafe error paths in sigchld()
+
+die() calls vfprintf(3) and exit(3), which are not
+async-signal-safe.  If SIGCHLD is handled while exiting, this
+can make st hang or crash.
+
+Commit d6ea0a1 replaced exit(3) by _exit(2) in sigchld()
+but the error paths still call die().  Fix that by using
+_exit(2) there as well.
+---
+ st.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/st.c b/st.c
+--- a/st.c
++++ b/st.c
+@@ -715,14 +715,19 @@ sigchld(int a)
+-	int stat;
++	int stat, olderrno;
+ 	pid_t p;
+ 
+-	if ((p = waitpid(pid, &stat, WNOHANG)) < 0)
+-		die("waiting for pid %hd failed: %s\n", pid, strerror(errno));
++	olderrno = errno;
++	do {
++		p = waitpid(pid, &stat, WNOHANG);
++	} while (p < 0 && errno == EINTR);
+ 
+-	if (pid != p)
++	if (p < 0)
++		_exit(1);
++
++	if (pid != p) {
++		errno = olderrno;
+ 		return;
++	}
+ 
+-	if (WIFEXITED(stat) && WEXITSTATUS(stat))
+-		die("child exited with status %d\n", WEXITSTATUS(stat));
+-	else if (WIFSIGNALED(stat))
+-		die("child terminated due to signal %d\n", WTERMSIG(stat));
++	if ((WIFEXITED(stat) && WEXITSTATUS(stat)) || WIFSIGNALED(stat))
++		_exit(1);
+ 	_exit(0);
+-- 
+2.39.2

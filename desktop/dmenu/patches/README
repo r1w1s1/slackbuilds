@@ -1,0 +1,33 @@
+Patches for dmenu 5.4
+=====================
+
+These patches are backported from the dmenu upstream repository
+(https://git.suckless.org/dmenu) and applied at build time by
+the SlackBuild script.
+
+01-cleanup-schemes-colors.patch
+  commit 77f96d704bd16b04fe731da815a4e76c4e62decb
+  Author: Hiltjo Posthuma <hiltjo@codemadness.org>
+  Date:   Sat, 27 Sep 2025
+
+  Cleanup schemes and colors. Adds proper cleanup functions drw_clr_free()
+  and drw_scm_free() to properly free XftColor objects on exit, fixing a
+  memory leak. Also fixes sizeof(XftColor) to sizeof(Clr) for consistency.
+
+02-drw-scm-free-call-free-inside.patch
+  commit 8b48986f4c730725367e2865e5ea24931855018f
+  Author: Hiltjo Posthuma <hiltjo@codemadness.org>
+  Date:   Mon, 29 Sep 2025
+
+  Move free(scm) inside drw_scm_free() for cleaner API. Simplifies caller
+  code by handling both XftColorFree and free() in one function, since
+  drw_scm_create() is responsible for the allocation.
+
+03-add-outline-colors-options.patch
+  commit 7175c4880bac3d2a2d4a6262b59193f0a38e2fdb
+  Author: Julien Addé <juadde+suckless@gmail.com>
+  Date:   Wed, 28 Jan 2026
+
+  Add -of and -ob arguments for outline colors in multi-selection mode.
+  Allows customization of outline foreground and background colors when
+  using dmenu's multi-selection feature (-m flag).
