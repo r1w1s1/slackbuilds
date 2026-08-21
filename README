@@ -18,6 +18,7 @@ desktop/dmenu
 desktop/herbe
 desktop/slstatus
 misc/bdf2psf
+misc/xhidecursor
 office/mupdf
 system/busybox
 system/st
