@@ -1,0 +1,17 @@
+From e65146d2918e0072fc09b3dfb06785e170787164 Mon Sep 17 00:00:00 2001
+From: Ivan Vetrov <vetrov.iv5@gmail.com>
+Date: Wed, 5 Nov 2025 08:28:42 +0300
+Subject: [PATCH] cleanup(): fix for loop bounds
+
+diff --git a/tabbed.c b/tabbed.c
+index d6e4aaf..e65146d 100644
+--- a/tabbed.c
++++ b/tabbed.c
+@@ -214,7 +214,7 @@ cleanup(void)
+ 	int i;
+ 
+-	for (i = 0; i < nclients; i++) {
++	for (i = nclients - 1; i >= 0; i--) {
+ 		focus(i);
+ 		killclient(NULL);
+ 		XReparentWindow(dpy, clients[i]->win, root, 0, 0);
