@@ -13,6 +13,7 @@ rebuildable.
 
 PACKAGES
 
+academic/calc
 desktop/dwm
 desktop/dmenu
 desktop/herbe
