@@ -1,0 +1,15 @@
+From: howard-tran <howard-tran@users.noreply.github.com>
+Subject: Sort z -l results by descending score
+
+Backport of upstream pull request #304 by howard-tran.
+
+Display z -l results from highest to lowest score so the best matches appear
+first.
+---
+diff --git a/z.sh b/z.sh
+index c78f3cb..e4b8cf4 100644
+--- a/z.sh
++++ b/z.sh
+@@ -159,1 +159,1 @@
+-                    cmd = "sort -n >&2"
++                    cmd = "sort -nr >&2"

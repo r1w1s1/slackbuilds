@@ -1,0 +1,15 @@
+From: thadk <thadk@users.noreply.github.com>
+Subject: Fix restricted matching in -c
+
+Backport of upstream pull request #151 by thadk.
+
+The -c option must restrict matches to paths below the current directory,
+not paths that merely share its textual prefix.
+---
+diff --git a/z.sh b/z.sh
+index c78f3cb..6a8ee1a 100644
+--- a/z.sh
++++ b/z.sh
+@@ -125,1 +125,1 @@
+-                    c) fnd="^$PWD $fnd";;
++                    c) fnd="^$PWD/ $fnd";;
